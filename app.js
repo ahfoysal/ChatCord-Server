@@ -13,14 +13,24 @@ const dotenv = require("dotenv")
 
 const app = new express()
 const server = http.createServer(app)
-const io = new Server(server)
-app.use(bodyParser.json())
+const io = new Server(server, {
+  cors: {
+    origin: 'http://localhost:5173',
+    methods: ['GET', 'POST']
+  }
+});app.use(bodyParser.json())
 app.use(cors())
 
 
 dotenv.config()
 
 let users = []
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  next();
+});
 
 const addUser = (userId, socketId) => {
   !users.some((user) => user.userId === userId) && users.push({ userId, socketId })
@@ -44,19 +54,26 @@ io.on("connection", (socket) => {
   })
 
   socket.on("sendMessage", ({ senderId, receiverId, text }) => {
+    console.log('triggered')
     const receiver = getUser(receiverId)
     const sender = getUser(senderId)
 
     if (!receiver || !sender) {
       return
     }
+    io.to(sender.socketId).to(receiver.socketId).emit("getMessage", {
+      senderId,
+      text
+    })
 
     io.to(receiver.socketId).to(sender.socketId).emit("getMessage", {
       senderId,
       text
     })
+
   })
 
+  
   socket.on("disconnect", () => {
     console.log("User Disconnected");
     removeUser(socket.id)

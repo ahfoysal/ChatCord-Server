@@ -4,21 +4,21 @@ const authRoutes = require("./src/routes/auth")
 const chatRoutes = require("./src/routes/chat")
 const messageRoute = require("./src/routes/messageRoute")
 const http = require("http")
-const { Server } = require("socket.io")
+// const { Server } = require("socket.io")
 const bodyParser = require("body-parser")
 const cors = require("cors")
-const bcrypt = require("bcrypt")
 const dotenv = require("dotenv")
 
 
 const app = new express()
-const server = http.createServer(app)
-const io = new Server(server, {
-  cors: {
-    origin: 'http://localhost:5173',
-    methods: ['GET', 'POST']
-  }
-});app.use(bodyParser.json())
+// const server = http.createServer(app)
+// const io = new Server(server, {
+//   cors: {
+//     origin: 'http://localhost:3000',
+//     methods: ['GET', 'POST']
+//   }
+// });
+app.use(bodyParser.json())
 app.use(cors())
 
 
@@ -44,42 +44,42 @@ const getUser = (userId) => {
   return users.find(user => user.userId === userId)
 }
 
-io.on("connection", (socket) => {
-  console.log("User Connected");
-  socket.on("addUser", userId => {
-    addUser(userId, socket.id)
-    // console.log("users", userId);
+// io.on("connection", (socket) => {
+//   console.log("User Connected");
+//   // socket.on("addUser", userId => {
+//   //   addUser(userId, socket.id)
+//   //   // console.log("users", userId);
 
-    io.emit("getUsers", users)
-  })
+//   //   io.emit("getUsers", users)
+//   // })
 
-  socket.on("sendMessage", ({ senderId, receiverId, text }) => {
-    console.log('triggered')
-    const receiver = getUser(receiverId)
-    const sender = getUser(senderId)
+//   // socket.on("sendMessage", ({ senderId, receiverId, text }) => {
+//   //   console.log('triggered')
+//   //   const receiver = getUser(receiverId)
+//   //   const sender = getUser(senderId)
 
-    if (!receiver || !sender) {
-      return
-    }
-    io.to(sender.socketId).to(receiver.socketId).emit("getMessage", {
-      senderId,
-      text
-    })
+//   //   if (!receiver || !sender) {
+//   //     return
+//   //   }
+//   //   io.to(sender.socketId).to(receiver.socketId).emit("getMessage", {
+//   //     senderId,
+//   //     text
+//   //   })
 
-    io.to(receiver.socketId).to(sender.socketId).emit("getMessage", {
-      senderId,
-      text
-    })
+//   //   io.to(receiver.socketId).to(sender.socketId).emit("getMessage", {
+//   //     senderId,
+//   //     text
+//   //   })
 
-  })
+//   // })
 
   
-  socket.on("disconnect", () => {
-    console.log("User Disconnected");
-    removeUser(socket.id)
-    io.emit("getUsers", users)
-  })
-})
+//   // socket.on("disconnect", () => {
+//   //   console.log("User Disconnected");
+//   //   removeUser(socket.id)
+//   //   io.emit("getUsers", users)
+//   // })
+// })
 
 //Route Handle
 app.use("/api/v1", authRoutes)
@@ -100,8 +100,8 @@ mongoose.connect(process.env.MONGODB_URL, OPTION, (err) => {
 })
 
 
-server.listen(5001, () => {
-  console.log("Socket Server Connected Successfully");
-})
+// server.listen(5001, () => {
+//   console.log("Socket Server Connected Successfully");
+// })
 
 module.exports = app

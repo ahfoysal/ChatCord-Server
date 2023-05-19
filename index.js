@@ -11,8 +11,12 @@ const server = app.listen(process.env.PORT, (err) => {
 });
 const io = require("socket.io")(server, {
   cors: {
-    origin: [" https://chatcord.pewds.vercel.app, http://localhost:3000", "http://localhost:5173", "http://192.168.31.12:3000, https://chatcord-pewds.vercel.app"],
-    methods: ["GET", "POST"]
+    origin: [
+      "https://chatcord.pewds.vercel.app,http://localhost:3000",
+      "http://localhost:5173",
+      "http://192.168.31.12:3000, https://chatcord-pewds.vercel.app",
+    ],
+    methods: ["GET", "POST"],
   },
   pingTimeout: 60000,
 });
@@ -28,9 +32,9 @@ io.on("connection", (socket) => {
     socket.join(room);
     console.log("user joined room" + room);
   });
-  socket.on("typing", (room) =>{
-    console.log(room.userId, "typing")
-    socket.in(room.conversationId).emit("typing", room)
+  socket.on("typing", (room) => {
+    console.log(room.userId, "typing");
+    socket.in(room.conversationId).emit("typing", room);
   });
   socket.on("stop typing", (room) => socket.in(room).emit("stop typing"));
 

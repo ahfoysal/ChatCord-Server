@@ -19,6 +19,7 @@ const UserSchema = new mongoose.Schema(
       default:
         "https://static.wikia.nocookie.net/naruto/images/d/d6/Naruto_Part_I.png/revision/latest/scale-to-width-down/1200?cb=20210223094656",
     },
+    deviceId: { type: String },
     conversations: [conversationSchema],
     lastActiveTime: { type: Date },
     isActive: { type: Boolean, default: false },

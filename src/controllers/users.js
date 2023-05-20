@@ -132,21 +132,27 @@ exports.login = (req, res) => {
 };
 
 exports.updateProfile = (req, res) => {
-  let email = req.headers["email"];
-  let reqBody = req.body;
-  UserModel.updateOne({ email: email }, reqBody, (err, data) => {
-    if (err) {
-      res.status(400).json({
-        status: "Fail to Update",
-        data: err,
-      });
-    } else {
-      res.status(200).json({
-        status: "Updated Successfull",
-        data: data,
-      });
+
+  let { deviceId, userId } = req.body;
+  console.log(deviceId, userId);
+  UserModel.findByIdAndUpdate(
+    userId,
+    { $set: { deviceId } },
+    { new: true },
+    (err, data) => {
+      if (err) {
+        res.status(400).json({
+          status: "Fail to Update",
+          data: err,
+        });
+      } else {
+        res.status(200).json({
+          status: "Updated Successfully",
+          data: data,
+        });
+      }
     }
-  });
+  );
 };
 
 exports.selectProfile = (req, res) => {

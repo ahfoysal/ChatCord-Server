@@ -53,7 +53,7 @@ exports.registration = async (req, res) => {
 
       let Payload = {
         exp: Math.floor(Date.now() / 1000) * (24 * 60 * 60),
-        data: { _id: user._id, email: user.email, photoUrl: user.photoUrl, name: user.name },
+        data: { _id: user._id, email: user.email, photoUrl: user.photoUrl, name: user.name, deviceId: user.deviceId },
       };
       console.log(user, Payload)
       const token = jwt.sign(Payload, process.env.JWT_SECRET);
@@ -104,6 +104,7 @@ exports.login = (req, res) => {
             email: data.email,
             photoUrl: data.photoUrl,
             name: data.name,
+            deviceId: data.deviceId
           };
 
           let Payload = {

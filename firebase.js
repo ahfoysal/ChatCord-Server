@@ -7,7 +7,7 @@ admin.initializeApp({
 });
 
 const sendNotification = (token, senderName , text) => {
- 
+ if(!token) return
 const message = {
   notification: {
     title: senderName,

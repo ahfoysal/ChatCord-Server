@@ -1,6 +1,8 @@
 const app = require("./app");
+const {sendNotification}  = require("./firebase");
 
 const server = app.listen(process.env.PORT, (err) => {
+  
   err
     ? console.log("Server Error")
     : console.log(
@@ -11,7 +13,7 @@ const server = app.listen(process.env.PORT, (err) => {
 });
 const io = require("socket.io")(server, {
   cors: {
-    origin: "https://chatcord.pewds.vercel.app",
+    origin: "http://localhost:3000",
     methods: ["GET", "POST"],
   },
   pingTimeout: 60000,
@@ -35,18 +37,25 @@ io.on("connection", (socket) => {
   socket.on("stop typing", (room) => socket.in(room).emit("stop typing"));
 
   socket.on("new message", (newMessageReceived) => {
+    // Send a message to the device corresponding to the provided
+    // registration token.
+    // console.log(newMessageReceived)
     newMessageReceived.chats.conversation.members.forEach((user) => {
+      console.log(user.id.deviceId)
       if (user.id._id == newMessageReceived.message.senderId) return;
+      sendNotification(user.id.deviceId, 'name', 'message')
       newMessageReceived.message.time = Date.now();
       //  if(newMessageReceived.chats.conversation._id !== newMessageReceived.message.conversationId)return
       // if(newMessageReceived.chats.conversation._id)
-      console.log(
-        newMessageReceived.chats.conversation._id,
-        newMessageReceived.message.conversationId
-      );
+      // console.log(
+      //   newMessageReceived.chats.conversation._id,
+      //   newMessageReceived.message.conversationId
+      // );
       socket
         .in(newMessageReceived.chats.conversation._id)
         .emit("message received", newMessageReceived.message);
     });
   });
 });
+
+

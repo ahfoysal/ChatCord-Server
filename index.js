@@ -43,8 +43,10 @@ io.on("connection", (socket) => {
     newMessageReceived.chats.conversation.members.forEach((user) => {
       console.log(user.id.deviceId)
       if (user.id._id == newMessageReceived.message.senderId) return;
-      sendNotification(user.id.deviceId, 'name', 'message')
+  
+      sendNotification(user.id.deviceId, newMessageReceived?.message?.sender?.name, newMessageReceived?.message?.text)
       newMessageReceived.message.time = Date.now();
+     
       //  if(newMessageReceived.chats.conversation._id !== newMessageReceived.message.conversationId)return
       // if(newMessageReceived.chats.conversation._id)
       // console.log(

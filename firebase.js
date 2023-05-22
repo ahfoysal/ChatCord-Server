@@ -6,17 +6,16 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
-const sendNotification = ( registrationToken, title, body) => {
+const sendNotification = (token, senderName , text) => {
  
-  const message = {
-    notification: {
-      title: title,
-      body: body
-    },
-    token: registrationToken
-  };
-  console.log(registrationToken, 'token')
-  
+const message = {
+  notification: {
+    title: senderName,
+    body: text
+  },
+  token: token
+};
+
   // Send a message to the device corresponding to the provided
   // registration token.
   admin.messaging()
@@ -29,4 +28,4 @@ const sendNotification = ( registrationToken, title, body) => {
       console.log("Error sending message:", error);
     });
 };
-module.exports = { admin, sendNotification };
+module.exports = {  sendNotification };

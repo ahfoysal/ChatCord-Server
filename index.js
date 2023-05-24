@@ -23,7 +23,7 @@ io.on("connection", (socket) => {
 
   socket.on("setup", (userData) => {
     // console.log(userData)
-    socket.join(userData._id);
+    socket.join(userData?._id);
     socket.emit("connected");
   });
   socket.on("join chat", (room) => {

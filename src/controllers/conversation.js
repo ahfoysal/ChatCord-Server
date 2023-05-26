@@ -1,55 +1,76 @@
 const ConversationModel = require("../models/ConversationModel");
 const UserModel = require("../models/UserModel");
-
-exports.getUserConversations = async (req, res) => {
+const MessageModel = require("../models/MessageModel");
+///////
+exports.createFriend = async (req, res) => {
   try {
-    const user = await UserModel.findById(req.params.userId).populate({
-      path: "conversations.id",
-      select: "_id members isGroupChat createdAt updatedAt lastMessage",
-      populate: {
-        path: "members.id",
-        model: "Users",
-        select: "_id name email photoUrl"
-      }
-    });
+    const senderId = req.body.senderId;
+    const receiverId = req.body.receiverId;
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    // Update sender's friend list with receiver's ID
+    const updatedSender = await UserModel.findByIdAndUpdate(
+      senderId,
+      { $addToSet: { friends: receiverId } },
+      { new: true }
+    );
+
+    // Update receiver's friend list with sender's ID
+    const updatedReceiver = await UserModel.findByIdAndUpdate(
+      receiverId,
+      { $addToSet: { friends: senderId } },
+      { new: true }
+    );
+
+    // Check if both users were successfully updated
+    if (!updatedSender || !updatedReceiver) {
+      throw new Error("Failed to update users");
     }
-  
-    return res.status(200).json(user);
+
+    // Return updated friend lists in the response
+    const response = {
+      friends: [updatedSender.friends || [], updatedReceiver.friends || []],
+    };
+    return res.status(200).json(response);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
 
+/////
+exports.findConversation = async (req, res) => {
+  try {
+    const pageNumber = parseInt(req.query.page || 1);
+    const skip = (pageNumber - 1) * 100;
 
+    // Check if conversation exists
+    const conversation = await ConversationModel.findById(req.params.id)
+      .populate({
+        path: "members",
+        select: "_id name email photoUrl isActive updatedAt",
+      })
+      .exec();
+    if (!conversation) {
+      return res.status(404).json({ error: "Conversation not found" });
+    }
+    const messages = await MessageModel.find({ conversationId: req.params.id })
+      .sort({ createdAt: -1 }) // sort messages in descending order of creation date
+      .skip(skip) // skip the first (pageNumber - 1) * 100 messages
+      .limit(100) // limit the result to 100 messages
+      .exec();
+    conversation.messages = messages;
+    // Get messages for the requested page
 
-// Get messages for a conversation based on page number
-const getMessagesForPage = (conversation, pageNumber) => {
-  // Sort messages in descending order based on their createdAt field
-  conversation.messages.sort((a, b) => b.createdAt - a.createdAt);
-
-  // Set the number of messages per page
-  const messagesPerPage = 50;
-
-  // Calculate the starting and ending indexes for the messages to return
-  const startIndex = (pageNumber - 1) * messagesPerPage;
-  const endIndex = startIndex + messagesPerPage;
-
-  // Slice the messages array to get only the messages for the current page
-  const messagesForPage = conversation.messages.slice(startIndex, endIndex);
-
-  return messagesForPage;
+    return res.status(200).json(conversation);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
 };
+//////
 
-// Sort messages for a conversation
-const sortConversationMessages = (conversation) => {
-  conversation.messages.sort((a, b) => b.createdAt - a.createdAt);
-};
+//////
 
-// Create a new message for a conversation
 exports.createMessage = async (req, res) => {
   try {
     // Validate request body
@@ -57,57 +78,73 @@ exports.createMessage = async (req, res) => {
       return res.status(400).json({ error: "Invalid input" });
     }
 
-    // Check if conversation exists
-    const conversation = await ConversationModel.findById(
-      req.body.conversationId
-    ).populate("members.id");
-    if (!conversation) {
-      return res.status(404).json({ error: "Conversation not found" });
+    // Check if message sender exists
+    const sender = await UserModel.findById(req.body.senderId);
+    if (!sender) {
+      return res.status(404).json({ error: "Sender not found" });
     }
 
     // Create new message object
-    const newMessage = {
-      text: req.body.text,
+    const newMessage = new MessageModel({
+      conversationId: req.body.conversationId,
       senderId: req.body.senderId,
+      text: req.body.text,
       messageType: req.body.messageType || "text",
-      createdAt: Date.now(), // Set createdAt field to current time
-    };
-
-    // Update conversation with new message
-    const savedMessage = await ConversationModel.findByIdAndUpdate(
-      req.body.conversationId,
-      {
-        $push: { messages: newMessage },
-        $set: {
-          updatedAt: Date.now(),
-          lastMessage: newMessage,
-        },
-      },
-      { new: true }
-    )
-      .populate("members.id")
-      .exec();
-
-    // Sort messages for the updated conversation
-    sortConversationMessages(savedMessage);
-
-    // Get messages for the first page
-    const messagesForPage = getMessagesForPage(savedMessage, 1);
-
-    // Return the updated conversation object with messages for the first page
-    return res.status(200).json({
-      conversation: {
-        ...savedMessage.toObject(),
-        messages: messagesForPage,
-      },
-      currentPage: 1,
-      totalPages: Math.ceil(savedMessage.messages.length / 50),
     });
+    const savedMessage = await newMessage.save();
+
+    const conversation = await ConversationModel.findByIdAndUpdate(
+      req.body.conversationId,
+      { lastMessage: savedMessage._id },
+      { new: true }
+    );
+    // Save message in the database
+
+    // Return success response
+    return res.status(200).json({ conversation, newMessage });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+
+exports.getUserConversations = async (req, res) => {
+  try {
+    console.log(req.params.userId);
+    const user = await UserModel.findById(req.params.userId)
+      .select("-password")
+      .populate([
+        {
+          path: "conversations",
+          populate: [
+            {
+              path: "members",
+              model: "User",
+              select: "_id name email photoUrl isActive updatedAt",
+            },
+            {
+              path: "lastMessage",
+              model: "Message",
+            },
+          ],
+        },
+        {
+          path: "friends",
+          select: "_id name email photoUrl isActive updatedAt",
+        },
+      ])
+      .exec();
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json(user);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 exports.createConversation = async (req, res) => {
   try {
     const Sender = req.body.Sender;
@@ -115,7 +152,7 @@ exports.createConversation = async (req, res) => {
 
     // Check if a conversation already exists between the two members
     const conversation = await ConversationModel.findOne({
-      $and: [{ "members.id": Sender }, { "members.id": Receiver }],
+      $and: [{ members: Sender }, { members: Receiver }],
     });
     if (conversation) {
       return res.status(400).json({
@@ -126,57 +163,30 @@ exports.createConversation = async (req, res) => {
 
     // Create a new conversation
     const newConversation = new ConversationModel({
-      members: [{ id: Sender }, { id: Receiver }],
+      members: [Sender, Receiver],
     });
 
     const savedConversation = await newConversation.save();
 
     // Push the conversation id to both members
-    const conversationId = savedConversation._id;
-
     await UserModel.updateMany(
       { _id: { $in: [Sender, Receiver] } },
-      { $push: { conversations: { id: conversationId } } }
+      { $push: { conversations: savedConversation._id } }
     );
 
-    return res.status(200).json(savedConversation);
+    // Return only the conversation id in the response
+    const response = { conversations: [{ _id: savedConversation._id }] };
+    return res.status(200).json(response);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
-
 
 // Get messages for a conversation based on page number
-exports.findConversation = async (req, res) => {
-  try {
-    const pageNumber = parseInt(req.query.page || 1);
 
-    // Check if conversation exists
-    const conversation = await ConversationModel.findById(req.params.id)
-      .populate("members.id")
-      .exec();
-    if (!conversation) {
-      return res.status(404).json({ error: "Conversation not found" });
-    }
+// Create a new message for a conversation
 
-    // Get messages for the requested page
-    const messagesForPage = getMessagesForPage(conversation, pageNumber);
-
-    return res.status(200).json({
-      conversation: {
-        ...conversation.toObject(),
-        messages: messagesForPage,
-      },
-      currentPage: pageNumber,
-      totalPages: Math.ceil(conversation.messages.length / 50),
-    });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: "Internal server error" });
-  }
-};
+// Get messages for a conversation based on page number
 
 // Create a new conversation between two users
-
-

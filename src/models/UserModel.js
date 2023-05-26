@@ -1,9 +1,5 @@
 const mongoose = require("mongoose");
 
-const conversationSchema = new mongoose.Schema({
-  id: { type: mongoose.Schema.Types.ObjectId, ref: "Conversation" },
-});
-
 const UserSchema = new mongoose.Schema(
   {
     name: { type: String, trim: true },
@@ -20,13 +16,18 @@ const UserSchema = new mongoose.Schema(
         "https://static.wikia.nocookie.net/naruto/images/d/d6/Naruto_Part_I.png/revision/latest/scale-to-width-down/1200?cb=20210223094656",
     },
     deviceId: { type: String },
-    conversations: [conversationSchema],
+    conversations: [{ type: mongoose.Schema.Types.ObjectId, ref: "Conversation" }],
+    isPage: {
+      type: Boolean,
+      default: false,
+    },
     lastActiveTime: { type: Date },
     isActive: { type: Boolean, default: false },
+    friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "User", unique: true }]
   },
   { timestamps: true, versionKey: false }
 );
 
-const UserModel = mongoose.model("Users", UserSchema);
+const UserModel = mongoose.model("User", UserSchema);
 
 module.exports = UserModel;

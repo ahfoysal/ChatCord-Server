@@ -4,23 +4,23 @@ const MessageModel = require("../models/MessageModel");
 ///////
 exports.discoverUsers = async (req, res) => {
   try {
-    const userId = req.params.id; 
+    const userId = req.params.id;
     console.log(userId);
     const currentUser = await UserModel.findById(userId);
-    if(!userId) return
+    if (!userId) return;
 
     // Get an array of friend IDs or an empty array if user has no friends
-    const friendIds = currentUser?.friends?.map((friendId) => friendId.toString()) || [];
+    const friendIds =
+      currentUser?.friends?.map((friendId) => friendId.toString()) || [];
     console.log(friendIds);
-
+    friendIds.push(userId);
+    console.log(friendIds);
     // Fetch all users except the current user and their friends
     const users = await UserModel.find({
-      _id: { $ne: userId },
-      _id: { $nin: friendIds } 
-     
-        }).select("_id name email photoUrl isActive updatedAt")
+      _id: { $nin: friendIds },
+    }).select("_id name email photoUrl isActive updatedAt");
 
-    return res.status(200).json( users );
+    return res.status(200).json(users);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "Internal server error" });
@@ -200,7 +200,7 @@ exports.createConversation = async (req, res) => {
     );
 
     // Return only the conversation id in the response
-    const response = { conversation: savedConversation } ;
+    const response = { conversation: savedConversation };
     return res.status(200).json(response);
   } catch (err) {
     console.error(err);

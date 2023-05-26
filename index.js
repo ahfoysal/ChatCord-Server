@@ -40,7 +40,7 @@ io.on("connection", (socket) => {
     // Send a message to the device corresponding to the provided
     // registration token.
     // console.log(newMessageReceived)
-    newMessageReceived.chats.conversation.members.forEach((user) => {
+    newMessageReceived.chats.members.forEach((user) => {
       console.log(user.id.deviceId)
       if (user.id._id == newMessageReceived.message.senderId) return;
   

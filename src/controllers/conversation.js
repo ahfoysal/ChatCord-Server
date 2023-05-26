@@ -2,6 +2,26 @@ const ConversationModel = require("../models/ConversationModel");
 const UserModel = require("../models/UserModel");
 const MessageModel = require("../models/MessageModel");
 ///////
+exports.discoverUsers = async (req, res) => {
+  try {
+    const userId = req.params.id; // assuming you have authentication middleware that attaches the user ID to the request object
+    const currentUser = await UserModel.findById(userId);
+    if(!userId) return
+    // Get an array of friend IDs
+    const friendIds = currentUser.friends.map((friendId) => friendId.toString());
+
+    // Fetch all users except the current user and their friends
+    const users = await UserModel.find({
+      _id: { $ne: userId },
+      friends: { $nin: [...friendIds, userId] }, // filter out friends and the current user
+    }).select("_id name email photoUrl isActive updatedAt")
+
+    return res.status(200).json( users );
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
 exports.createFriend = async (req, res) => {
   try {
     const senderId = req.body.senderId;

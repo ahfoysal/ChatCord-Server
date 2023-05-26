@@ -13,7 +13,7 @@ const UserSchema = new mongoose.Schema(
     photoUrl: {
       type: String,
       default:
-        "https://static.wikia.nocookie.net/naruto/images/d/d6/Naruto_Part_I.png/revision/latest/scale-to-width-down/1200?cb=20210223094656",
+        "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png",
     },
     deviceId: { type: String },
     conversations: [{ type: mongoose.Schema.Types.ObjectId, ref: "Conversation" }],

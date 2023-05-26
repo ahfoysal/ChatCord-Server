@@ -176,7 +176,7 @@ exports.createConversation = async (req, res) => {
       $and: [{ members: Sender }, { members: Receiver }],
     });
     if (conversation) {
-      return res.status(400).json({
+      return res.status(200).json({
         message: "Conversation already exists",
         conversation,
       });

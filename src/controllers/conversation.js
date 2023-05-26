@@ -11,15 +11,14 @@ exports.discoverUsers = async (req, res) => {
 
     // Get an array of friend IDs or an empty array if user has no friends
     const friendIds = currentUser?.friends?.map((friendId) => friendId.toString()) || [];
+    console.log(friendIds);
 
     // Fetch all users except the current user and their friends
-    let usersQuery = {
+    const users = await UserModel.find({
       _id: { $ne: userId },
-    };
-    if (friendIds.length > 0) {
-      usersQuery.friends = { $nin: [...friendIds, userId] }; // filter out friends and the current user
-    }
-    const users = await UserModel.find(usersQuery).select("_id name email photoUrl isActive updatedAt")
+      _id: { $nin: friendIds } 
+     
+        }).select("_id name email photoUrl isActive updatedAt")
 
     return res.status(200).json( users );
   } catch (err) {
@@ -27,7 +26,6 @@ exports.discoverUsers = async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
-
 exports.createFriend = async (req, res) => {
   try {
     const senderId = req.body.senderId;

@@ -59,7 +59,7 @@ exports.findConversation = async (req, res) => {
       .limit(100) // limit the result to 100 messages
       .exec();
     conversation.messages = messages;
-    console.log(messages);
+    // console.log(messages);
     // Get messages for the requested page
 
     return res.status(200).json(conversation);

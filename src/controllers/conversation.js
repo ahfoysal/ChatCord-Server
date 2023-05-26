@@ -200,7 +200,7 @@ exports.createConversation = async (req, res) => {
     );
 
     // Return only the conversation id in the response
-    const response = { conversations: savedConversation } ;
+    const response = { conversation: savedConversation } ;
     return res.status(200).json(response);
   } catch (err) {
     console.error(err);

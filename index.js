@@ -13,7 +13,8 @@ const server = app.listen(process.env.PORT, (err) => {
 });
 const io = require("socket.io")(server, {
   cors: {
-    origin: "https://chatcord.pewds.vercel.app",
+    // origin: "https://chatcord.pewds.vercel.app",
+    origin: "http://localhost:3000",
     methods: ["GET", "POST"],
   },
   pingTimeout: 60000,
@@ -39,12 +40,12 @@ io.on("connection", (socket) => {
   socket.on("new message", (newMessageReceived) => {
     // Send a message to the device corresponding to the provided
     // registration token.
-    // console.log(newMessageReceived)
+    console.log(newMessageReceived, 'new')
     newMessageReceived.chats.members.forEach((user) => {
-      console.log(user.id.deviceId)
-      if (user.id._id == newMessageReceived.message.senderId) return;
+      console.log(user._id, 'id');
+      if (user._id == newMessageReceived.message.senderId) return;
   
-      sendNotification(user.id.deviceId, newMessageReceived?.message?.sender?.name, newMessageReceived?.message?.text)
+      sendNotification(user.deviceId, newMessageReceived?.message?.sender?.name, newMessageReceived?.message?.text)
       newMessageReceived.message.time = Date.now();
      
       //  if(newMessageReceived.chats.conversation._id !== newMessageReceived.message.conversationId)return
@@ -53,8 +54,9 @@ io.on("connection", (socket) => {
       //   newMessageReceived.chats.conversation._id,
       //   newMessageReceived.message.conversationId
       // );
+      console.log(newMessageReceived.chats._id, newMessageReceived.message,'c')
       socket
-        .in(newMessageReceived.chats.conversation._id)
+        .in(newMessageReceived.chats._id)
         .emit("message received", newMessageReceived.message);
     });
   });

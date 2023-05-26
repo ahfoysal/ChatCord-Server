@@ -9,6 +9,8 @@ const conversationSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    messages: [{ type: mongoose.Schema.Types.ObjectId, ref: "Message" }],
+
     lastMessage: { type: mongoose.Schema.Types.ObjectId, ref: "Message" },
   },
   { timestamps: true }

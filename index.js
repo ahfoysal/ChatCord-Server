@@ -13,8 +13,8 @@ const server = app.listen(process.env.PORT, (err) => {
 });
 const io = require("socket.io")(server, {
   cors: {
-    // origin: "https://chatcord.pewds.vercel.app",
-    origin: "http://localhost:3000",
+    origin: "https://chatcord.pewds.vercel.app",
+    // origin: "http://localhost:3000",
     methods: ["GET", "POST"],
   },
   pingTimeout: 60000,

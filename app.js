@@ -86,6 +86,9 @@ app.use("/api/v1", authRoutes)
 
 app.use("/api/v1", chatRoutes)
 app.use("/api/v1", messageRoute)
+app.get("/", async (req, res) => {
+return res.send("hello")
+    });
 
 let OPTION = {
   autoIndex: true,

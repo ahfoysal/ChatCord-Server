@@ -141,6 +141,7 @@ exports.getUserConversations = async (req, res) => {
       .populate([
         {
           path: "conversations",
+          options: { sort: { updatedAt: -1 } }, // Sort by "updatedAt" in descending order
           populate: [
             {
               path: "members",
